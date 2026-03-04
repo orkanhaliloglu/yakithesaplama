@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yakıt Karşılaştırma Hesaplayıcı | Elektrik vs Benzin</title>
+    <meta name="description"
+        content="Elektrikli ve benzinli araçların yakıt ve enerji tüketim maliyetlerini karşılaştırın. Günlük, aylık ve yıllık tasarrufunuzu hesaplayın.">
+    <!-- PDF Export Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Yakıt <span class="gradient-text">Karşılaştırma</span></h1>
+            <p>Elektrikli ve Benzinli Araç Maliyet Analizi</p>
+        </header>
+
+        <main class="calculator-grid" id="export-content">
+            <!-- Genel Bilgiler -->
+            <section class="glass-card section-general">
+                <h2><i class="icon">🛣️</i> Sürüş Bilgileri</h2>
+                <div class="input-group">
+                    <label for="distance-val">Ortalama Mesafe</label>
+                    <div class="distance-input-row" style="display: flex; gap: 0.5rem;">
+                        <input type="number" id="distance-val" value="50" min="1" step="1" style="flex: 2;">
+                        <select id="distance-period"
+                            style="flex: 1; border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.9rem;">
+                            <option value="daily">Günlük</option>
+                            <option value="weekly">Haftalık</option>
+                            <option value="monthly">Aylık</option>
+                            <option value="yearly">Yıllık</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Benzinli Araç -->
+            <section class="glass-card section-petrol">
+                <div class="card-header">
+                    <h2><span class="dot petrol-dot"></span> Benzinli Araç</h2>
+                </div>
+                <div class="car-showcase">
+                    <img id="petrol-img" src="" alt="Benzinli Araç Görseli">
+                </div>
+                <div class="input-group">
+                    <label for="petrol-model">Araç Marka / Model Seçin</label>
+                    <select id="petrol-model"
+                        style="border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.9rem; font-size: 1.05rem; outline: none;">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="petrol-consumption">Ortalama Tüketim (Litre/100km)</label>
+                    <input type="number" id="petrol-consumption" value="7.5" min="0.1" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="petrol-price">Benzin Birim Fiyatı (₺/Litre)
+                        <button id="btn-fetch-petrol"
+                            style="margin-left: 10px; background: var(--petrol-color); border:none; padding: 4px 8px; border-radius:6px; color:white; cursor:pointer; font-size: 0.8rem;">Otomatik
+                            Çek</button>
+                    </label>
+                    <input type="number" id="petrol-price" value="42.50" min="0.1" step="0.01">
+                    <small class="hint" id="petrol-hint">Varsayılan veya otomatik çekilmiş fiyat.</small>
+                </div>
+                <div class="cost-preview" id="petrol-km-cost">
+                    KM başına maliyet: <span>0.00 ₺</span>
+                </div>
+            </section>
+
+            <!-- Elektrikli Araç -->
+            <section class="glass-card section-electric">
+                <div class="card-header">
+                    <h2><span class="dot electric-dot"></span> Elektrikli Araç</h2>
+                </div>
+                <div class="car-showcase ev-showcase">
+                    <img id="ev-img" src="" alt="Elektrikli Araç Görseli">
+                </div>
+                <div class="input-group">
+                    <label for="ev-model">Araç Marka / Model Seçin</label>
+                    <select id="ev-model"
+                        style="border-radius: 12px; background: rgba(15, 23, 42, 0.6); color: white; border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.9rem; font-size: 1.05rem; outline: none;">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="ev-consumption">Ortalama Enerji Tüketimi (kWh/100km)</label>
+                    <input type="number" id="ev-consumption" value="16.5" min="0.1" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Şarj Yöntemi</label>
+                    <div class="radio-group"
+                        style="display: flex; gap: 1rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: white;">
+                            <input type="radio" name="ev-charge-type" value="ac" checked> 🏠 Ev (AC)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: white;">
+                            <input type="radio" name="ev-charge-type" value="dc"> ⚡ İstasyon (DC)
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ev-price">Elektrik Birim Fiyatı (₺/kWh)</label>
+                    <input type="number" id="ev-price" value="2.50" min="0.1" step="0.01">
+                    <small class="hint" id="ev-hint">Evden AC Şarj için ortalama: ~2.50₺ (Seçime göre otomatik
+                        güncellenir)</small>
+                </div>
+                <div class="cost-preview" id="ev-km-cost">
+                    KM başına maliyet: <span>0.00 ₺</span>
+                </div>
+            </section>
+        </main>
+
+        <!-- Sonuçlar -->
+        <section class="glass-card section-results">
+            <h2>Karşılaştırma Sonucu</h2>
+
+            <div class="savings-highlight" id="savings-highlight">
+                <p>Yıllık Tasarruf (Elektrikli ile)</p>
+                <h3 id="yearly-savings" class="positive">0.00 ₺</h3>
+            </div>
+
+            <div class="results-grid">
+                <div class="result-box petrol-result">
+                    <h4 id="res-petrol-title">Benzinli Aracım</h4>
+                    <div class="cost-row"><span>Günlük:</span> <strong id="res-petrol-day">0 ₺</strong></div>
+                    <div class="cost-row"><span>Aylık:</span> <strong id="res-petrol-month">0 ₺</strong></div>
+                    <div class="cost-row"><span>Yıllık:</span> <strong id="res-petrol-year">0 ₺</strong></div>
+                </div>
+
+                <div class="vs-badge">VS</div>
+
+                <div class="result-box ev-result">
+                    <h4 id="res-ev-title">Elektrikli Aracım</h4>
+                    <div class="cost-row"><span>Günlük:</span> <strong id="res-ev-day">0 ₺</strong></div>
+                    <div class="cost-row"><span>Aylık:</span> <strong id="res-ev-month">0 ₺</strong></div>
+                    <div class="cost-row"><span>Yıllık:</span> <strong id="res-ev-year">0 ₺</strong></div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button id="btn-export-pdf"
+                    style="background: linear-gradient(135deg, var(--ev-color), var(--success-color)); border:none; padding: 1rem 2rem; border-radius: 12px; color:white; cursor:pointer; font-size: 1.1rem; font-weight: 600; width: 100%; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: transform 0.2s;">
+                    📥 Raporu PDF Olarak İndir
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
