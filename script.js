@@ -208,26 +208,94 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', updateEvPrice);
     });
 
-    // --- NEW LOGIC: Fetch Petrol Price (Mock/Proxy Example) ---
-    btnFetchPetrol.addEventListener('click', async () => {
+    // --- NEW LOGIC: FUEL TYPE SELECTION (Petrol/Diesel) ---
+    const fuelTypeRadios = document.getElementsByName('fuel-type');
+    const updateFuelType = () => {
+        const type = document.querySelector('input[name="fuel-type"]:checked').value;
+        if (type === 'petrol') {
+            petrolPriceInput.value = '42.50';
+            petrolHint.textContent = 'Varsayılan veya otomatik çekilmiş benzin fiyatı.';
+            resPetrolTitle.textContent = 'Benzinli Araç';
+        } else {
+            petrolPriceInput.value = '43.00';
+            petrolHint.textContent = 'Varsayılan veya otomatik çekilmiş motorin fiyatı.';
+            resPetrolTitle.textContent = 'Dizel Araç';
+        }
+        calculate();
+    };
+
+    Array.from(fuelTypeRadios).forEach(radio => {
+        radio.addEventListener('change', updateFuelType);
+    });
+
+    // --- NEW LOGIC: Fetch Fuel Prices from Shell (Live Scraper via AllOrigins Proxy) ---
+    const fetchShellPrices = async () => {
+        const fuelType = document.querySelector('input[name="fuel-type"]:checked').value;
         btnFetchPetrol.textContent = 'Yükleniyor...';
         btnFetchPetrol.disabled = true;
+
         try {
-            // Using a CORS proxy to fetch generic petrol data or a mock delay
-            // We simulate an API call here for reliability
-            await new Promise(resolve => setTimeout(resolve, 800));
-            // Simulate current avg Istanbul price
-            const currentPrice = 43.50;
-            petrolPriceInput.value = currentPrice;
-            petrolHint.textContent = 'Güncel tahmini fiyat otomatik çekildi.';
+            // Shell Turkey Prices Page
+            const targetUrl = 'https://www.shell.com.tr/suruculer/shell-yakitlari/akaryakit-pompa-satis-fiyatlari.html';
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+
+            if (!data.contents) throw new Error('No content received');
+
+            // Create a temporary DOM parser to extract table data safely
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data.contents, 'text/html');
+
+            // Look for Istanbul (Avrupa), Şişli for example, but realistically any Istanbul row will do
+            // Let's grab the Kurşunsuz 95 (V-Power) and Motorin prices directly
+
+            // The table has standard structures
+            // data-city="İstanbul (Avrupa)" data-district="Şişli" data-fuel="Kursunsuz_95"
+            const petrolRow = doc.querySelector('tr[data-city="İstanbul (Avrupa)"][data-fuel="Kursunsuz_95"] td:last-child');
+            const dieselRow = doc.querySelector('tr[data-city="İstanbul (Avrupa)"][data-fuel="Motorin"] td:last-child') ||
+                doc.querySelector('tr[data-city="İstanbul (Avrupa)"][data-fuel="V_Pro_Motorin"] td:last-child');
+
+            let petrolPrice = null;
+            let dieselPrice = null;
+
+            if (petrolRow && petrolRow.textContent) {
+                // Values come like "43,50", turning to float 43.50
+                petrolPrice = parseFloat(petrolRow.textContent.trim().replace(',', '.'));
+            }
+            if (dieselRow && dieselRow.textContent) {
+                dieselPrice = parseFloat(dieselRow.textContent.trim().replace(',', '.'));
+            }
+
+            // Decide which price to set based on selected fuel type
+            if (fuelType === 'petrol') {
+                if (petrolPrice && !isNaN(petrolPrice)) {
+                    petrolPriceInput.value = petrolPrice.toFixed(2);
+                    petrolHint.textContent = `Shell İstanbul Güncel Benzin: ${petrolPrice.toFixed(2)}₺`;
+                } else {
+                    throw new Error('Price parse failed');
+                }
+            } else {
+                if (dieselPrice && !isNaN(dieselPrice)) {
+                    petrolPriceInput.value = dieselPrice.toFixed(2);
+                    petrolHint.textContent = `Shell İstanbul Güncel Motorin: ${dieselPrice.toFixed(2)}₺`;
+                } else {
+                    throw new Error('Price parse failed');
+                }
+            }
+
             calculate();
         } catch (error) {
-            petrolHint.textContent = 'Otomatik çekim başarısız, manuel giriniz.';
+            console.error('Scraping Error:', error);
+            petrolHint.textContent = 'Fiyat çekilemedi. Lütfen manuel giriniz.';
         } finally {
             btnFetchPetrol.textContent = 'Otomatik Çek';
             btnFetchPetrol.disabled = false;
         }
-    });
+    };
+
+    btnFetchPetrol.addEventListener('click', fetchShellPrices);
 
     // --- NEW LOGIC: PDF Export ---
     btnExportPdf.addEventListener('click', () => {
