@@ -246,9 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnFetchPetrol.disabled = true;
 
         try {
-            const targetUrl = 'https://api.opet.com.tr/api/fuelprices/allprices';
-            // Using corsproxy.io for better reliability
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+            // Using Vercel Rewrites to bypass CORS reliably
+            const proxyUrl = '/api/fuel-prices';
 
             const response = await fetch(proxyUrl);
             if (!response.ok) throw new Error('API request failed');
