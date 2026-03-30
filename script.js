@@ -240,21 +240,20 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', updateFuelType);
     });
 
-    // --- NEW LOGIC: Fetch Fuel Prices from OPET (via AllOrigins Proxy) ---
+    // --- NEW LOGIC: Fetch Fuel Prices from OPET (via CORS Proxy) ---
     const fetchFuelPrices = async () => {
         btnFetchPetrol.textContent = 'Yükleniyor...';
         btnFetchPetrol.disabled = true;
 
         try {
             const targetUrl = 'https://api.opet.com.tr/api/fuelprices/allprices';
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            // Using corsproxy.io for better reliability
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
             const response = await fetch(proxyUrl);
-            const data = await response.json();
-
-            if (!data.contents) throw new Error('No content received');
+            if (!response.ok) throw new Error('API request failed');
             
-            const allPrices = JSON.parse(data.contents);
+            const allPrices = await response.json();
             
             // Find İstanbul Avrupa
             const istanbulAvrupa = allPrices.find(p => p.provinceName === 'İSTANBUL AVRUPA');
