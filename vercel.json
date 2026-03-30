@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/api/fuel-prices",
-      "destination": "https://api.opet.com.tr/api/fuelprices/allprices"
-    }
-  ]
-}
